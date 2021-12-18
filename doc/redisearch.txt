@@ -1,0 +1,43 @@
+FT.CREATE business_1m_time ON HASH PREFIX 1 blog:post: SCHEMA title TEXT SORTABLE published_at NUMERIC SORTABLE category TAG SORTABLE
+
+
+建索引：
+FT.CREATE business_1m_time ON HASH SCHEMA appkey TAG CASESENSITIVE business TAG CASESENSITIVE count NUMERIC NOINDEX sum NUMERIC NOINDEX 1 TAG 2 TAG
+
+插入文档：
+HSET business_1m_time:appkey01-business01-1,1;2,3 appkey "appkey01" business "business01" count 3 sum 2 1 "1" 2 "2"
+HSET business_1m_time:appkey01-business01-1,1;2,4 appkey "appkey01" business "business01" count 3 sum 5 1 "1" 2 "3"
+HSET business_1m_time:appkey01-business01-1,1;2,5 appkey "appkey01" business "business01" count 3 sum 7 1 "1" 2 "4"
+HSET business_1m_time:appkey01-business01-1,1;2,6 appkey "appkey01" business "business01" count 3 sum 9 1 "1" 2 "5"
+HSET business_1m_time:appkey01-business01-1,1;2,7 appkey "appkey01" business "business01" count 3 sum 4 1 "1" 2 "6"
+
+HSET business_1m_time:appkey01-business01-1,2;2,4 appkey "appkey01" business "business01" count 3 sum 2 1 "2" 2 "4"
+HSET business_1m_time:appkey01-business01-1,2;2,3 appkey "appkey01" business "business01" count 3 sum 2 1 "2" 2 "3"
+
+检索：
+FT.SEARCH business_1m_time "@appkey:{appkey01} @business:{business01}"
+
+检索：多tag 或
+FT.SEARCH business_1m_time "@appkey:{appkey01} @business:{business01} @tags:{1|2|3}"
+
+检索：多tag 与
+FT.SEARCH business_1m_time "@appkey:{appkey01} @business:{business01} @tags:{1} @tags:{2} @tags:{3}"
+
+FT.SEARCH business_1m_time "@appkey:{appkey01} @business:{business01} @tagId:1:{1}"
+FT.SEARCH business_1m_time "@appkey:{appkey01} @business:{business01} @2:{3}"
+
+
+
+
+删除索引
+FT.DROPINDEX business_1m_time DD
+
+HDEL business_1m_time:appkey01-business01-1,2,3-1_1,2_2,3_3
+
+修改：递增
+HINCRBY business_1m_time:appkey01-business01-1,2-1_1,2_3 count 2
+
+FT.AGGREGATE business_1m_time "@appkey:{appkey01} @business:{business01} @1:{1}" GROUPBY 1 @2 REDUCE SUM 1 count AS count_sum REDUCE SUM 1 sum AS sum_sum APPLY "@sum_sum/@count_sum" AS avg SORTBY 1 @avg MAX 3
+
+
+FT.INFO business_1m_time
